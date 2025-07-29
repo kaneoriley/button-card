@@ -138,7 +138,11 @@ class ActionHandler extends HTMLElement implements ActionHandler {
     }
 
     element.actionHandler.start = (ev: Event) => {
-      this.cancelled = false;
+      // Don't respond when moved or scrolled while touch
+      if (ev.type != 'touchcancel') {
+        this.cancelled = false;
+      }
+
       let x;
       let y;
       if ((ev as TouchEvent).touches) {
@@ -172,17 +176,14 @@ class ActionHandler extends HTMLElement implements ActionHandler {
 
     element.actionHandler.end = (ev: Event) => {
       // Don't respond when moved or scrolled while touch
-      if (['touchend', 'touchcancel'].includes(ev.type) && this.cancelled) {
+      if (ev.type == 'touchcancel' || (ev.type == 'touchend' && this.cancelled)) {
         if (this.isRepeating && this.repeatTimeout) {
           clearInterval(this.repeatTimeout);
           this.isRepeating = false;
         }
         return;
       }
-      // Don't do anything else if touch event was cancelled
-      if (ev.type == 'touchcancel') {
-        return;
-      }
+
       const target = ev.target as HTMLElement;
       // Prevent mouse event if touch event
       if (ev.cancelable) {
